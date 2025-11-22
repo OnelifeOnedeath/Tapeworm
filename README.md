@@ -23,6 +23,6 @@ Tapeworm is a visual debugger for Brainfuck programs. It helps you:
 
 ```bash
 # Clone and run
-git clone https://github.com/yourusername/Tapeworm
+git clone [https://github.com/OnelifeOnedeath/Tapeworm]
 cd Tapeworm
 python src/tapeworm.py examples/hello.bf# Tapeworm
