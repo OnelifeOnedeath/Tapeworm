@@ -16,6 +16,7 @@ class Tapeworm:
         self.input_buffer = []        # Буфер ввода
         self.output_buffer = []       # Буфер вывода
         self.bracket_map = {}         # Карта скобок для циклов
+        self.stats = {'>':0, '<':0, '+':0, '-':0, '.':0, ',':0, '[':0, ']':0}  # 📊 СТАТИСТИКА
         
     def load_code(self, code):
         """Загружает и проверяет Brainfuck код"""
@@ -43,6 +44,10 @@ class Tapeworm:
             return None
             
         cmd = self.code[self.ip]
+        
+        # 📊 СЧИТАЕМ КОМАНДЫ
+        if cmd in self.stats:
+            self.stats[cmd] += 1
         
         # Состояние ДО выполнения команды
         state_before = {
@@ -111,6 +116,12 @@ class Tapeworm:
             'output': ''.join(self.output_buffer),
             'code': self.code
         }
+
+    def get_stats(self):
+        """📊 Возвращает статистику выполнения"""
+        total_commands = sum(self.stats.values())
+        stats_text = " | ".join([f"{cmd}:{count}" for cmd, count in self.stats.items() if count > 0])
+        return f"Всего команд: {total_commands} | {stats_text}"
     
     def run(self, max_steps=100000):
         """Запускает программу с базовой визуализацией"""
@@ -136,6 +147,7 @@ class Tapeworm:
         print("=" * 50)
         print(f"Выполнение завершено за {steps} шагов")
         print(f"Вывод: {''.join(self.output_buffer)}")
+        print(f"📊 Статистика: {self.get_stats()}")  # 📊 ВЫВОДИМ СТАТИСТИКУ
         
         return steps
 
