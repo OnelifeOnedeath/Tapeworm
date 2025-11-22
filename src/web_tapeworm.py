@@ -40,7 +40,7 @@ def main():
         if st.button("Hello World"):
             st.session_state.code = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
         if st.button("Простой счетчик"):
-            st.session_state.code = "+++[>+++<-]>. "
+            st.session_state.code = "+++[>+++<-]>."
     
     # Основная область
     col1, col2 = st.columns([1, 1])
@@ -75,8 +75,6 @@ def main():
         st.subheader("👀 Визуализация")
         if 'execution_done' not in st.session_state:
             st.info("Нажмите '🚀 Выполнить' для запуска визуализации")
-            st.image("https://via.placeholder.com/400x200/4A90E2/FFFFFF?text=Tapeworm+Visualizer", 
-                    caption="Здесь будет отображаться выполнение кода")
 
 def execute_bf(code, tape_size, max_steps, speed, output_col):
     """Выполняет Brainfuck код и показывает визуализацию"""
@@ -101,14 +99,11 @@ def execute_bf(code, tape_size, max_steps, speed, output_col):
         output_container = st.empty()
         tape_container = st.empty()
         step_container = st.empty()
+        stats_container = st.empty()  # 📊 КОНТЕЙНЕР ДЛЯ СТАТИСТИКИ
         progress_bar = st.progress(0)
         
         steps = 0
         output_text = ""
-        
-        # Плейсхолдер для анимации
-        with st.expander("📊 Детали выполнения", expanded=True):
-            details_placeholder = st.empty()
         
         # Выполняем пошагово
         while steps < max_steps:
@@ -127,21 +122,12 @@ def execute_bf(code, tape_size, max_steps, speed, output_col):
             tape_container.markdown(tape_html, unsafe_allow_html=True)
             
             # Информация о шаге
-            step_info = f"""
-            **Шаг {steps}:** 
-            - Команда: `{state['command']}`
-            - Позиция: {state['position']}
-            - Указатель: {state['after']['pointer']}
-            """
+            step_info = f"**Шаг {steps}:** Команда `{state['command']}` | Позиция: {state['position']} | Указатель: {state['after']['pointer']}"
             step_container.markdown(step_info)
             
-            # Детали выполнения
-            details_text = f"""
-            ```brainfuck
-{display_code_with_pointer(worm.code, state['position'])}
-            ```
-            """
-            details_placeholder.markdown(details_text)
+            # 📊 ОБНОВЛЯЕМ СТАТИСТИКУ КАЖДЫЕ 10 ШАГОВ
+            if steps % 10 == 0:
+                stats_container.markdown(f"**📊 Статистика:** {worm.get_stats()}")
             
             # Прогресс
             progress = min(steps / max_steps, 1.0)
@@ -154,7 +140,9 @@ def execute_bf(code, tape_size, max_steps, speed, output_col):
         
         # Финальный результат
         st.success(f"✅ Выполнение завершено за **{steps}** шагов")
-        st.balloons()
+        
+        # 📊 ФИНАЛЬНАЯ СТАТИСТИКА
+        st.markdown(f"**📈 Финальная статистика:** {worm.get_stats()}")
         
         if output_text:
             st.markdown(f"**🎉 Финальный вывод:** `{output_text}`")
@@ -192,29 +180,20 @@ def render_tape(tape, pointer, show_cells=20):
         background: white;
         font-family: 'Courier New', monospace;
         font-weight: bold;
-        transition: all 0.3s ease;
     }
     .cell.active {
         border-color: #dc3545;
-        background: linear-gradient(135deg, #ffe6e6, #ffcccc);
-        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
-        transform: scale(1.05);
+        background: #fff0f0;
+        box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
     }
     .cell-value {
         font-size: 16px;
         color: #212529;
-        font-weight: 800;
     }
     .cell-address {
         font-size: 11px;
         color: #6c757d;
         margin-top: 4px;
-    }
-    .pointer {
-        color: #dc3545;
-        font-weight: bold;
-        font-size: 12px;
-        margin-top: 2px;
     }
     .cell-index {
         font-size: 10px;
@@ -239,37 +218,11 @@ def render_tape(tape, pointer, show_cells=20):
             <div class="cell-index">{i}</div>
             <div class="cell-value">{value}</div>
             <div class="cell-address">'{char}'</div>
-            {"<div class='pointer'>⬆</div>" if is_active else ""}
         </div>
         """
     
     html += "</div>"
     return html
-
-def display_code_with_pointer(code, position):
-    """Показывает код с указателем на текущую команду"""
-    if position >= len(code):
-        return code
-    
-    # Вставляем указатель под текущей командой
-    lines = []
-    current_line = ""
-    
-    for i, char in enumerate(code):
-        current_line += char
-        if i == position:
-            # Добавляем строку с указателем
-            lines.append(current_line)
-            lines.append(" " * (len(current_line) - 1) + "^")
-            current_line = ""
-        elif len(current_line) >= 50:  # Перенос строки каждые 50 символов
-            lines.append(current_line)
-            current_line = ""
-    
-    if current_line:
-        lines.append(current_line)
-    
-    return "\n".join(lines)
 
 if __name__ == "__main__":
     main()
