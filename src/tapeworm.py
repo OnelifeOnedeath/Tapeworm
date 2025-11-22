@@ -101,6 +101,16 @@ class Tapeworm:
             'command': cmd,
             'position': self.ip - 1
         }
+
+    def get_state(self):
+        """Возвращает текущее состояние для визуализации"""
+        return {
+            'tape': self.tape.copy(),
+            'pointer': self.pointer,
+            'ip': self.ip,
+            'output': ''.join(self.output_buffer),
+            'code': self.code
+        }
     
     def run(self, max_steps=100000):
         """Запускает программу с базовой визуализацией"""
