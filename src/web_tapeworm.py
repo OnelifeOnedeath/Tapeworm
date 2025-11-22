@@ -41,6 +41,8 @@ def main():
             st.session_state.code = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
         if st.button("Простой счетчик"):
             st.session_state.code = "+++[>+++<-]>."
+        if st.button("Калькулятор 2+3"):
+            st.session_state.code = "++>+++[<+>-]."
     
     # Основная область
     col1, col2 = st.columns([1, 1])
@@ -99,8 +101,12 @@ def execute_bf(code, tape_size, max_steps, speed, output_col):
         output_container = st.empty()
         tape_container = st.empty()
         step_container = st.empty()
-        stats_container = st.empty()  # 📊 КОНТЕЙНЕР ДЛЯ СТАТИСТИКИ
+        stats_container = st.empty()
         progress_bar = st.progress(0)
+        
+        # 📊 ДЕТАЛИ ВЫПОЛНЕНИЯ
+        with st.expander("🔍 Детали выполнения", expanded=True):
+            details_placeholder = st.empty()
         
         steps = 0
         output_text = ""
@@ -125,9 +131,17 @@ def execute_bf(code, tape_size, max_steps, speed, output_col):
             step_info = f"**Шаг {steps}:** Команда `{state['command']}` | Позиция: {state['position']} | Указатель: {state['after']['pointer']}"
             step_container.markdown(step_info)
             
-            # 📊 ОБНОВЛЯЕМ СТАТИСТИКУ КАЖДЫЕ 10 ШАГОВ
+            # 📊 СТАТИСТИКА
             if steps % 10 == 0:
                 stats_container.markdown(f"**📊 Статистика:** {worm.get_stats()}")
+            
+            # 🔍 ДЕТАЛИ ВЫПОЛНЕНИЯ
+            details_text = f"""
+            ```brainfuck
+{display_code_with_pointer(worm.code, state['position'])}
+            ```
+            """
+            details_placeholder.markdown(details_text)
             
             # Прогресс
             progress = min(steps / max_steps, 1.0)
@@ -140,6 +154,7 @@ def execute_bf(code, tape_size, max_steps, speed, output_col):
         
         # Финальный результат
         st.success(f"✅ Выполнение завершено за **{steps}** шагов")
+        st.balloons()
         
         # 📊 ФИНАЛЬНАЯ СТАТИСТИКА
         st.markdown(f"**📈 Финальная статистика:** {worm.get_stats()}")
@@ -180,15 +195,18 @@ def render_tape(tape, pointer, show_cells=20):
         background: white;
         font-family: 'Courier New', monospace;
         font-weight: bold;
+        transition: all 0.3s ease;
     }
     .cell.active {
         border-color: #dc3545;
-        background: #fff0f0;
-        box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+        background: linear-gradient(135deg, #ffe6e6, #ffcccc);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        transform: scale(1.05);
     }
     .cell-value {
         font-size: 16px;
         color: #212529;
+        font-weight: 800;
     }
     .cell-address {
         font-size: 11px;
@@ -223,6 +241,31 @@ def render_tape(tape, pointer, show_cells=20):
     
     html += "</div>"
     return html
+
+def display_code_with_pointer(code, position):
+    """Показывает код с указателем на текущую команду"""
+    if position >= len(code):
+        return code
+    
+    # Вставляем указатель под текущей командой
+    lines = []
+    current_line = ""
+    
+    for i, char in enumerate(code):
+        current_line += char
+        if i == position:
+            # Добавляем строку с указателем
+            lines.append(current_line)
+            lines.append(" " * (len(current_line) - 1) + "^")
+            current_line = ""
+        elif len(current_line) >= 50:  # Перенос строки каждые 50 символов
+            lines.append(current_line)
+            current_line = ""
+    
+    if current_line:
+        lines.append(current_line)
+    
+    return "\n".join(lines)
 
 if __name__ == "__main__":
     main()
